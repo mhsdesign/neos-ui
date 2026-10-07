@@ -8,3 +8,7 @@
  * source code.
  */
 export {Tree} from './application';
+export type {TreeNodeBreadcrumb} from './application';
+export type {TreeDataSource, TreeNodeDTO, NodeTypeFilterOptionDTO} from './domain';
+export {createLinkEditorTreeDataSource} from './infrastructure/createLinkEditorTreeDataSource';
+export {getNodeTypeFilterOptions} from './infrastructure/http';

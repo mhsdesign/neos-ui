@@ -35,7 +35,8 @@ class RenderedNodeDomAddress implements \JsonSerializable
     {
         $me = new self();
         $me->contextPath = $array['contextPath'];
-        $me->fusionPath = $array['fusionPath'];
+        // documents are not rendered via a fusion path, e.g. when creating a document node
+        $me->fusionPath = $array['fusionPath'] ?? null;
         return $me;
     }
 

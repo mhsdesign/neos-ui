@@ -1,0 +1,44 @@
+.skeleton {
+    animation: pulse 1.2s ease-in-out infinite alternate;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-Half);
+    height: 34px;
+}
+
+.chevron {
+    flex: none;
+    width: 20px;
+}
+
+.icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+    background-color: var(--colors-ContrastNeutral);
+}
+
+.label {
+    height: 10px;
+    border-radius: 2px;
+    background-color: var(--colors-ContrastNeutral);
+}
+
+@keyframes pulse {
+    from {
+        opacity: .5;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton {
+        animation: none;
+    }
+}

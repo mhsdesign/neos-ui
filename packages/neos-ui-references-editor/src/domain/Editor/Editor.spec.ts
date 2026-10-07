@@ -435,4 +435,59 @@ describe('Editor', () => {
             }
         });
     })
+
+    test('move reference and queue change', () => {
+        const reference = (targetNodeId: string) => ({targetNodeId, properties: null, presentation: undefined});
+        const editor = Editor.fromLoadingState(3).withReferencesAndConfiguration(
+            {
+                'a': reference('a'),
+                'b': reference('b'),
+                'c': reference('c')
+            },
+            {},
+            {}
+        ).withMovedReference(2, 0);
+
+        expect(Object.keys(editor.getReferences())).toStrictEqual(['c', 'a', 'b']);
+        expect(editor.getChange('nodeid', 'myRef')).toStrictEqual({
+            type: 'Neos.Neos.Ui:Reference',
+            subject: 'nodeid',
+            payload: {
+                referenceName: 'myRef',
+                serializedReferences: [
+                    {targetNodeId: 'c', properties: null},
+                    {targetNodeId: 'a', properties: null},
+                    {targetNodeId: 'b', properties: null}
+                ]
+            }
+        });
+    })
+
+    test('replace references from picker and queue change', () => {
+        const reference = (targetNodeId: string) => ({targetNodeId, properties: null, presentation: undefined});
+        const editor = Editor.fromLoadingState(2).withReferencesAndConfiguration(
+            {'a': reference('a'), 'b': reference('b')},
+            {},
+            {}
+        ).withReferences({'b': reference('b'), 'c': reference('c')});
+
+        expect(Object.keys(editor.getReferences())).toStrictEqual(['b', 'c']);
+        expect(editor.getChange('nodeid', 'myRef')?.payload.serializedReferences).toStrictEqual([
+            {targetNodeId: 'b', properties: null},
+            {targetNodeId: 'c', properties: null}
+        ]);
+        expect(Object.keys(editor.withDiscard().getReferences())).toStrictEqual(['a', 'b']);
+    })
+
+    test('move reference out of bounds is ignored', () => {
+        const editor = Editor.fromLoadingState(1).withReferencesAndConfiguration(
+            {'a': {targetNodeId: 'a', properties: null, presentation: undefined}},
+            {},
+            {}
+        );
+
+        expect(editor.withMovedReference(0, 1)).toBe(editor);
+        expect(editor.withMovedReference(0, 0)).toBe(editor);
+        expect(editor.withMovedReference(3, 0)).toBe(editor);
+    })
 })

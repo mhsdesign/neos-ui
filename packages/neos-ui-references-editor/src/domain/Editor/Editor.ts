@@ -48,6 +48,28 @@ export class Editor {
         })
     }
 
+    public withReferences(references: IReferences): Editor {
+        return new Editor({
+            ...this.data,
+            transientValues: references
+        })
+    }
+
+    public withMovedReference(fromIndex: number, toIndex: number): Editor {
+        const entries = Object.entries(this.data.transientValues ?? this.data.initialValues ?? {});
+        if (fromIndex === toIndex || !entries[fromIndex] || toIndex < 0 || toIndex >= entries.length) {
+            return this;
+        }
+        const [moved] = entries.splice(fromIndex, 1);
+        entries.splice(toIndex, 0, moved);
+
+        // todo object key order is only reliable for non integer-like ids, see reference model rework
+        return new Editor({
+            ...this.data,
+            transientValues: Object.fromEntries(entries)
+        })
+    }
+
     public withSelectedTargetNodeId(targetNodeId: string): Editor {
         const transientValues = this.data.transientValues ?? this.data.initialValues;
         if (transientValues[targetNodeId]) {
@@ -177,6 +199,16 @@ export class Editor {
         return this.data.transientValues ?? this.data.initialValues ?? {};
     }
 
+    public getReferenceInPropertyEditing(): IReference | undefined {
+        return this.data.isReferencePropertyEditingOpen
+            ? this.getReferences()[this.data.selectedReferenceId]
+            : undefined;
+    }
+
+    public getConstraints(): any {
+        return this.data.constraints ?? {};
+    }
+
     public getPropertySchema(): any {
         return this.data.propertySchema ?? {};
     }
@@ -188,7 +220,7 @@ export class Editor {
     public getSelectedNodeIds(): string[]
     {
         // todo memo value
-        return Object.keys(this.data.transientValues ?? this.data.initialValues)
+        return Object.keys(this.data.transientValues ?? this.data.initialValues ?? {})
     }
 
     public getChange(nodeAddress: string, referenceName: string): Change | null {

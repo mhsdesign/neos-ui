@@ -8,166 +8,170 @@
  * source code.
  */
 import React from 'react';
+import cx from 'classnames';
 
-import {Tree as NeosTree, Icon} from '@neos-project/react-ui-components';
+import {Icon} from '@neos-project/react-ui-components';
+import {translate} from '@neos-project/neos-ui-i18n';
 
-import {TreeNodeDTO} from '../domain/TreeNodeDTO';
-import {getChildrenForTreeNode} from '../infrastructure/http';
+import {TreeDataSource, TreeNodeDTO} from '../domain';
+import style from './style.module.css';
 
-interface Props {
-    workspaceName: string;
-    legacyDimensionValues: Record<string, string[]>;
-    baseNodeTypeFilter: string;
-    linkableNodeTypes?: string[];
-    treeNode: TreeNodeDTO;
-    selectedTreeNodeId?: string;
-    level: number;
-    onClick: (treeNodeId: string) => void;
+export type TreeNodeBreadcrumb = {icon: string; label: string};
+
+export type SelectionState = 'selected' | 'newlySelected' | null;
+
+export interface TreeContext {
+    dataSource: TreeDataSource;
+    searchTerm: string;
+    isFiltered: boolean;
+    canSelect: boolean;
+    allowDeselect: boolean;
+    getSelectionState(nodeId: string): SelectionState;
+    containsSelectedNode(treeNode: TreeNodeDTO): boolean;
+    onSelect(treeNode: TreeNodeDTO, ancestors: TreeNodeBreadcrumb[]): void;
+    onDeselect(nodeId: string): void;
 }
 
-export const TreeNode: React.FC<Props> = (props) => {
-    const isSelected =
-        props.selectedTreeNodeId === props.treeNode.nodeAggregateIdentifier;
-    const hasChildren =
-        props.treeNode.children.length > 0 ||
-        props.treeNode.hasUnloadedChildren;
-    const [isCollapsed, setIsCollapsed] = React.useState(
-        props.treeNode.hasUnloadedChildren
+const INDENTATION_PX = 24;
+
+const HighlightedLabel: React.FC<{label: string; searchTerm: string}> = ({label, searchTerm}) => {
+    const start = searchTerm ? label.toLowerCase().indexOf(searchTerm.toLowerCase()) : -1;
+    if (start === -1) {
+        return <>{label}</>;
+    }
+    const end = start + searchTerm.length;
+    return <>{label.slice(0, start)}<mark className={style.match}>{label.slice(start, end)}</mark>{label.slice(end)}</>;
+};
+
+const NodeIcon: React.FC<{treeNode: TreeNodeDTO}> = ({treeNode}) => (
+    <span className={style.rowIcon}>
+        <Icon icon={treeNode.icon} />
+        {treeNode.hasScheduledDisabledState ? (
+            <span className={cx(style.visibilityBadge, {[style.visibilityBadgeIsDisabled]: treeNode.isDisabled})}><Icon icon="clock" /></span>
+        ) : treeNode.isDisabled ? (
+            <span className={cx(style.visibilityBadge, style.visibilityBadgeIsDisabled)}><Icon icon="times" /></span>
+        ) : null}
+    </span>
+);
+
+export const TreeNode: React.FC<{
+    treeNode: TreeNodeDTO;
+    level: number;
+    ancestors: TreeNodeBreadcrumb[];
+    context: TreeContext;
+}> = ({treeNode, level, ancestors, context}) => {
+    const [loadedChildren, setLoadedChildren] = React.useState<TreeNodeDTO[] | null>(null);
+    const [isLoadingChildren, setIsLoadingChildren] = React.useState(false);
+    const [isExpanded, setIsExpanded] = React.useState(() =>
+        context.isFiltered || (treeNode.children.length > 0 && (level < 1 || context.containsSelectedNode(treeNode)))
     );
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [children, setChildren] = React.useState(props.treeNode.children);
-    const [hasError, setHasError] = React.useState(false);
-    const customIconComponent = React.useMemo(() => {
-        if (props.treeNode.hasScheduledDisabledState) {
-            const circleColor = props.treeNode.isDisabled
-                ? 'error'
-                : 'primaryBlue';
 
-            return (
-                <span className="fa-layers fa-fw">
-                    <Icon icon={props.treeNode.icon} />
-                    <Icon
-                        icon="circle"
-                        color={circleColor}
-                        transform="shrink-5 down-6 right-4"
-                    />
-                    <Icon icon="clock" transform="shrink-9 down-6 right-4" />
-                </span>
-            );
-        }
+    const children = loadedChildren ?? treeNode.children;
+    const hasChildren = children.length > 0 || treeNode.hasUnloadedChildren;
+    const selectionState = context.getSelectionState(treeNode.nodeAggregateIdentifier);
+    const isSelectable = treeNode.isLinkable && selectionState === null && context.canSelect;
+    const isDeselectable = selectionState !== null && context.allowDeselect;
 
-        if (props.treeNode.isDisabled) {
-            return (
-                <span className="fa-layers fa-fw">
-                    <Icon icon={props.treeNode.icon} />
-                    <Icon
-                        icon="circle"
-                        color="error"
-                        transform="shrink-3 down-6 right-4"
-                    />
-                    <Icon icon="times" transform="shrink-7 down-6 right-4" />
-                </span>
-            );
-        }
-
-        return null;
-    }, [
-        props.treeNode.hasScheduledDisabledState,
-        props.treeNode.isDisabled,
-        props.treeNode.icon
-    ]);
-    const handleNodeToggle = React.useCallback(async () => {
-        if (
-            isCollapsed &&
-            props.treeNode.hasUnloadedChildren &&
-            children.length === 0
-        ) {
-            setIsLoading(true);
+    const toggle = async () => {
+        if (!isExpanded && treeNode.hasUnloadedChildren && children.length === 0) {
+            setIsLoadingChildren(true);
             try {
-                const result = await getChildrenForTreeNode({
-                    workspaceName: props.workspaceName,
-                    legacyDimensionValues: props.legacyDimensionValues,
-                    treeNodeId: props.treeNode.nodeAggregateIdentifier,
-                    nodeTypeFilter: props.baseNodeTypeFilter,
-                    linkableNodeTypes: props.linkableNodeTypes
-                });
-
-                if ('success' in result) {
-                    setChildren(result.success.children);
-                }
-
-                if ('error' in result) {
-                    setHasError(true);
-                }
-            } catch (_) {
-                setHasError(true);
+                setLoadedChildren(await context.dataSource.getChildren(treeNode.nodeAggregateIdentifier));
+            } finally {
+                setIsLoadingChildren(false);
             }
+        }
+        setIsExpanded(expanded => !expanded);
+    };
 
-            setIsLoading(false);
-            setIsCollapsed(false);
-        } else {
-            setIsCollapsed((isCollapsed) => !isCollapsed);
+    // the row (de)selects the node, expanding is done via the chevron if the node itself is selectable
+    const handleRowClick = () => {
+        if (isDeselectable) {
+            context.onDeselect(treeNode.nodeAggregateIdentifier);
+        } else if (isSelectable) {
+            context.onSelect(treeNode, ancestors);
+        } else if (hasChildren && selectionState === null) {
+            toggle();
         }
-    }, [
-        props.workspaceName,
-        props.legacyDimensionValues,
-        props.treeNode.nodeAggregateIdentifier,
-        props.baseNodeTypeFilter,
-        children.length
-    ]);
-    const handleNodeClick = React.useCallback(() => {
-        if (props.treeNode.isMatchedByFilter && props.treeNode.isLinkable) {
-            props.onClick(props.treeNode.nodeAggregateIdentifier);
-        }
-    }, [
-        props.treeNode.isMatchedByFilter,
-        props.treeNode.nodeAggregateIdentifier
-    ]);
+    };
+
+    const ownBreadcrumb = {icon: treeNode.icon, label: treeNode.label};
 
     return (
-        <NeosTree.Node>
-            <NeosTree.Node.Header
-                labelIdentifier={'labelIdentifier'}
-                id={props.treeNode.nodeAggregateIdentifier}
-                hasChildren={hasChildren}
-                isLastChild={true}
-                isCollapsed={isCollapsed}
-                isActive={isSelected}
-                isFocused={isSelected}
-                isLoading={isLoading}
-                isDirty={false}
-                isHidden={props.treeNode.isDisabled}
-                isHiddenInIndex={
-                    props.treeNode.isHiddenInMenu ||
-                    !props.treeNode.isMatchedByFilter ||
-                    !props.treeNode.isLinkable
-                }
-                isDragging={false}
-                hasError={hasError}
-                label={props.treeNode.label}
-                icon={
-                    props.treeNode.isLinkable
-                        ? props.treeNode.icon
-                        : 'fas fa-unlink'
-                }
-                customIconComponent={customIconComponent}
-                iconLabel={props.treeNode.nodeTypeLabel}
-                level={props.level}
-                onToggle={handleNodeToggle}
-                onClick={handleNodeClick}
-                dragForbidden={true}
-                title={props.treeNode.label}
-            />
-            {isCollapsed
-                ? null
-                : children.map((childTreeNode) => (
-                    <TreeNode
-                        {...props}
-                        key={childTreeNode.nodeAggregateIdentifier}
-                        treeNode={childTreeNode}
-                        level={props.level + 1}
-                      />
-                  ))}
-        </NeosTree.Node>
+        <li role="treeitem" aria-expanded={hasChildren ? isExpanded : undefined} aria-selected={selectionState !== null}>
+            <div
+                className={cx(style.row, {
+                    [style.rowIsSelected]: selectionState === 'selected',
+                    [style.rowIsNewlySelected]: selectionState === 'newlySelected',
+                    [style.rowIsNotSelectable]: !treeNode.isLinkable,
+                    [style.rowIsDeselectable]: isDeselectable,
+                    [style.rowIsClickable]: isSelectable || isDeselectable
+                })}
+                style={{paddingLeft: level * INDENTATION_PX}}
+                title={treeNode.nodeTypeLabel ? translate(treeNode.nodeTypeLabel as any, treeNode.nodeTypeLabel) : undefined}
+                onClick={handleRowClick}
+            >
+                {hasChildren ? (
+                    <button
+                        type="button"
+                        className={style.chevron}
+                        aria-label={isExpanded ? translate('Neos.Neos:Main:collapse', 'Collapse') : translate('Neos.Neos:Main:expand', 'Expand')}
+                        onClick={event => {
+                            event.stopPropagation();
+                            toggle();
+                        }}
+                    >
+                        <Icon icon={isLoadingChildren ? 'spinner' : (isExpanded ? 'chevron-down' : 'chevron-right')} spin={isLoadingChildren} />
+                    </button>
+                ) : <span className={style.chevron} />}
+                <NodeIcon treeNode={treeNode} />
+                <span className={style.rowLabel}>
+                    <HighlightedLabel label={treeNode.label} searchTerm={context.searchTerm} />
+                </span>
+                {selectionState === 'selected' ? (
+                    <span className={style.state}><Icon icon="check" />{translate('Neos.Neos.Ui:Main:nodeTree.selected', 'Selected')}</span>
+                ) : null}
+                {selectionState === 'newlySelected' ? (
+                    <span className={cx(style.state, style.stateIsNew)}><Icon icon="check" />{translate('Neos.Neos.Ui:Main:nodeTree.added', 'Added')}</span>
+                ) : null}
+                {isDeselectable ? (
+                    <button
+                        type="button"
+                        className={style.deselectButton}
+                        onClick={event => {
+                            event.stopPropagation();
+                            context.onDeselect(treeNode.nodeAggregateIdentifier);
+                        }}
+                    >
+                        <Icon icon="times" />{translate('Neos.Neos.Ui:Main:nodeTree.deselect', 'Deselect')}
+                    </button>
+                ) : null}
+                {isSelectable ? (
+                    <button
+                        type="button"
+                        className={style.selectButton}
+                        onClick={event => {
+                            event.stopPropagation();
+                            context.onSelect(treeNode, ancestors);
+                        }}
+                    >
+                        <Icon icon="check" />{translate('Neos.Neos.Ui:Main:nodeTree.select', 'Select')}
+                    </button>
+                ) : null}
+            </div>
+            {isExpanded && children.length > 0 ? (
+                <ul role="group" className={style.group}>
+                    {children.map(child => (
+                        <TreeNode
+                            key={child.nodeAggregateIdentifier}
+                            treeNode={child}
+                            level={level + 1}
+                            ancestors={[...ancestors, ownBreadcrumb]}
+                            context={context}
+                        />
+                    ))}
+                </ul>
+            ) : null}
+        </li>
     );
 };

@@ -11,19 +11,14 @@ import {useSelector} from '@neos-project/neos-ui-redux-store';
 import {translate} from '@neos-project/neos-ui-i18n';
 import {State} from '@neos-project/framework-observable';
 import {Editor} from '../../domain/Editor/Editor';
+import style from './style.module.css';
 
 export const ReferencesPropertiesDialog: React.FC<{
-    editor$: State<Editor>
-}> = ({editor$}) => {
-    // todo use constraints
-    // todo lol initialValue is never null?
+    editor$: State<Editor>;
+    source: {icon: string; label: string};
+}> = ({editor$, source}) => {
     const editor = useLatestState(editor$);
-
-    // const form$ = React.useMemo(() => createState({
-    //     references: initialValue ?? [],
-    //     selectedReferenceId: Object.keys(initialValue!)[0]
-    // }), [initialValue]);
-    // const form = useLatestState(form$);
+    const target = editor.getReferenceInPropertyEditing()?.presentation;
 
     const dismiss = React.useCallback(() => editor$.update(editor => editor.withDismissedReferencePropertyEditing()), [editor$]);
     const apply = React.useCallback(() => editor$.update(editor => editor.withAppliedReferencePropertyEditing()), [editor$]);
@@ -36,45 +31,60 @@ export const ReferencesPropertiesDialog: React.FC<{
 
     return (
         <Dialog
-            id="neos-ReferencesEditor"
+            id="neos-ReferencesPropertiesDialog"
             isOpen={true}
             preventClosing={editor.isReferencePropertyEditingDirty()}
             onRequestClose={dismiss}
-            title={<div>Edit Relation Properties <Icon icon='arrows-left-right-to-line' /></div>}
+            title={
+                <div className={style.title}>
+                    <span className={style.node}>
+                        <Icon icon={source.icon} />
+                        <span className={style.nodeLabel}>{source.label}</span>
+                    </span>
+                    <Icon icon="long-arrow-alt-right" className={style.arrow} aria-label={translate('Neos.Neos.Ui:Main:referencesEditor.referencesTo', 'references')} />
+                    <span className={style.node}>
+                        <Icon icon={target?.icon ?? 'question'} className={style.targetIcon} />
+                        <span className={style.nodeLabel}>{target?.label}</span>
+                    </span>
+                </div>
+            }
             style="wide"
             autoFocus={true}
             actions={[
-                <Button onClick={dismiss}>
-                    {translate('Neos.Neos.Ui:LinkEditor.Main:dialog.action.cancel', '')}
+                <Button key="cancel" onClick={dismiss}>
+                    {translate('Neos.Neos:Main:cancel', 'Cancel')}
                 </Button>,
                 <Button
+                    key="apply"
                     style="success"
+                    hoverStyle="success"
                     type="submit"
                     disabled={!editor.isReferencePropertyEditingDirty()}
                     onClick={apply}
                 >
-                    {translate('Neos.Neos.Ui:LinkEditor.Main:dialog.action.apply', '')}
+                    {translate('Neos.Neos:Main:apply', 'Apply')}
                 </Button>
             ]}
         >
             <ErrorBoundary errorFallback={ErrorView}>
-
-                {Object.entries(editor.getPropertySchema()).map(([propertyName, propertyConfiguration]) =>
-                    <div key={propertyName} className={''}>
-                        <EditorEnvelope
-                            identifier={`${propertyName}--reference-dialog`}
-                            label={propertyConfiguration?.ui?.label}
-                            editor={propertyConfiguration?.ui?.editor}
-                            helpMessage={propertyConfiguration?.ui?.help?.message || ''}
-                            helpThumbnail={propertyConfiguration?.ui?.help?.thumbnail || ''}
-                            options={propertyConfiguration?.ui?.editorOptions}
-                            commit={(value) => editor$.update(editor => editor.withReferenceProperty(propertyName, value))}
-                            validationErrors={[]}
-                            value={editor.getReferencePropertyValue(propertyName) ?? ''}
-                        />
-                    </div>
-                )}
+                <div className={style.body}>
+                    {Object.entries(editor.getPropertySchema()).map(([propertyName, propertyConfiguration]: [string, any]) =>
+                        <div key={propertyName} className={style.property}>
+                            <EditorEnvelope
+                                identifier={`${propertyName}--reference-dialog`}
+                                label={propertyConfiguration?.ui?.label ?? propertyName}
+                                editor={propertyConfiguration?.ui?.inspector?.editor}
+                                helpMessage={propertyConfiguration?.ui?.help?.message || ''}
+                                helpThumbnail={propertyConfiguration?.ui?.help?.thumbnail || ''}
+                                options={propertyConfiguration?.ui?.inspector?.editorOptions}
+                                commit={(value: unknown) => editor$.update(editor => editor.withReferenceProperty(propertyName, value))}
+                                validationErrors={[]}
+                                value={editor.getReferencePropertyValue(propertyName) ?? ''}
+                            />
+                        </div>
+                    )}
+                </div>
             </ErrorBoundary>
         </Dialog>
-    )
-}
+    );
+};

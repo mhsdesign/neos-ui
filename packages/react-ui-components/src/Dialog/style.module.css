@@ -10,8 +10,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    /* todo must be over secondary */
-    z-index: 999999999;
+    z-index: var(--zIndex-Dialog);
     width: 100vw;
     height: 100vh;
     background: rgba(0, 0, 0, .8);

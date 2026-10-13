@@ -45,7 +45,8 @@ export const Tree: React.FC<Props> = (props) => {
     const [searchInput, setSearchInput] = React.useState(props.initialSearchTerm ?? '');
     const [searchTerm, setSearchTerm] = React.useState(props.initialSearchTerm ?? '');
     const [narrowNodeTypeFilter, setNarrowNodeTypeFilter] = React.useState(props.initialNarrowNodeTypeFilter ?? '');
-    const [root, setRoot] = React.useState<TreeNodeDTO | null>(null);
+    // the last loaded tree incl. the query it was loaded for, it stays visible while a new search is loading
+    const [loaded, setLoaded] = React.useState<{root: TreeNodeDTO; searchTerm: string; narrowNodeTypeFilter: string} | null>(null);
     const [error, setError] = React.useState<unknown>(null);
     const [isLoading, setIsLoading] = React.useState(true);
 
@@ -60,7 +61,7 @@ export const Tree: React.FC<Props> = (props) => {
         props.dataSource.getTree({searchTerm, narrowNodeTypeFilter}).then(
             loadedRoot => {
                 if (!isCancelled) {
-                    setRoot(loadedRoot);
+                    setLoaded({root: loadedRoot, searchTerm, narrowNodeTypeFilter});
                     setError(null);
                     setIsLoading(false);
                 }
@@ -82,11 +83,11 @@ export const Tree: React.FC<Props> = (props) => {
         props.selectedNodeIds.includes(treeNode.nodeAggregateIdentifier) || treeNode.children.some(containsSelectedNode),
     [selectedNodeIdsKey]);
 
-    const isFiltered = Boolean(searchTerm || narrowNodeTypeFilter);
+    const isFiltered = Boolean(loaded?.searchTerm || loaded?.narrowNodeTypeFilter);
 
     const context: TreeContext = {
         dataSource: props.dataSource,
-        searchTerm,
+        searchTerm: loaded?.searchTerm ?? '',
         isFiltered,
         canSelect: props.canSelect ?? true,
         allowDeselect: Boolean(props.allowDeselect && props.onDeselect),
@@ -101,14 +102,18 @@ export const Tree: React.FC<Props> = (props) => {
         onDeselect: nodeId => props.onDeselect?.(nodeId)
     };
 
+    const loadingLabel = translate('Neos.Neos.Ui:Main:nodeTree.loading', 'Loading node tree…');
+    const isReloading = isLoading && loaded !== null;
+
     let main;
-    if (isLoading) {
-        main = <TreeSkeleton label={translate('Neos.Neos.Ui:Main:nodeTree.loading', 'Loading node tree…')} />;
-    } else if (error || !root) {
+    if (isLoading && !loaded) {
+        main = <TreeSkeleton label={loadingLabel} />;
+    } else if (error || !loaded) {
         main = <div className={style.message}>{translate('Neos.Neos.Ui:Main:nodeTree.couldNotLoad', 'The node tree could not be loaded.')}</div>;
-    } else if (isFiltered && root.children.length === 0 && !root.isMatchedByFilter) {
+    } else if (isFiltered && loaded.root.children.length === 0 && !loaded.root.isMatchedByFilter) {
         main = <div className={style.message}>{translate('Neos.Neos:Main:noMatchesFound', 'No matches found')}</div>;
     } else {
+        const {root} = loaded;
         const topLevelNodes = props.hideRootNode ? root.children : [root];
         const topLevelAncestors = props.hideRootNode ? [{icon: root.icon, label: root.label}] : [];
         main = (
@@ -116,7 +121,7 @@ export const Tree: React.FC<Props> = (props) => {
                 {topLevelNodes.map(topLevelNode => (
                     <TreeNode
                         // remount the tree on every search, so the expanded state is reset
-                        key={`${searchTerm}|${narrowNodeTypeFilter}|${topLevelNode.nodeAggregateIdentifier}`}
+                        key={`${loaded.searchTerm}|${loaded.narrowNodeTypeFilter}|${topLevelNode.nodeAggregateIdentifier}`}
                         treeNode={topLevelNode}
                         level={0}
                         ancestors={topLevelAncestors}
@@ -145,7 +150,12 @@ export const Tree: React.FC<Props> = (props) => {
                     ) : null}
                 </div>
             ) : null}
-            <div className={style.scroll}>{main}</div>
+            <div className={style.scroll} aria-busy={isLoading}>
+                {isReloading ? (
+                    <div className={style.progress} role="status" aria-label={loadingLabel}><span /></div>
+                ) : null}
+                <div className={cx({[style.isReloading]: isReloading})}>{main}</div>
+            </div>
         </div>
     );
 };

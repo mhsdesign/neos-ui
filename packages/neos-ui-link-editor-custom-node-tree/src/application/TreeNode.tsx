@@ -104,10 +104,9 @@ export const TreeNode: React.FC<{
                     [style.rowIsSelected]: selectionState === 'selected',
                     [style.rowIsNewlySelected]: selectionState === 'newlySelected',
                     [style.rowIsNotSelectable]: !treeNode.isLinkable,
-                    [style.rowIsDeselectable]: isDeselectable,
                     [style.rowIsClickable]: isSelectable || isDeselectable
                 })}
-                style={{paddingLeft: level * INDENTATION_PX}}
+                style={{paddingLeft: `calc(var(--spacing-Half) + ${level * INDENTATION_PX}px)`}}
                 title={treeNode.nodeTypeLabel ? translate(treeNode.nodeTypeLabel as any, treeNode.nodeTypeLabel) : undefined}
                 onClick={handleRowClick}
             >
@@ -133,30 +132,6 @@ export const TreeNode: React.FC<{
                 ) : null}
                 {selectionState === 'newlySelected' ? (
                     <span className={cx(style.state, style.stateIsNew)}><Icon icon="check" />{translate('Neos.Neos.Ui:Main:nodeTree.added', 'Added')}</span>
-                ) : null}
-                {isDeselectable ? (
-                    <button
-                        type="button"
-                        className={style.deselectButton}
-                        onClick={event => {
-                            event.stopPropagation();
-                            context.onDeselect(treeNode.nodeAggregateIdentifier);
-                        }}
-                    >
-                        <Icon icon="times" />{translate('Neos.Neos.Ui:Main:nodeTree.deselect', 'Deselect')}
-                    </button>
-                ) : null}
-                {isSelectable ? (
-                    <button
-                        type="button"
-                        className={style.selectButton}
-                        onClick={event => {
-                            event.stopPropagation();
-                            context.onSelect(treeNode, ancestors);
-                        }}
-                    >
-                        <Icon icon="check" />{translate('Neos.Neos.Ui:Main:nodeTree.select', 'Select')}
-                    </button>
                 ) : null}
             </div>
             {isExpanded && children.length > 0 ? (

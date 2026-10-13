@@ -4,14 +4,16 @@
     flex-direction: column;
     height: 100%;
     min-height: 0;
+    background-color: var(--colors-ContrastDarkest);
+    border: 1px solid var(--colors-ContrastDark);
     font-size: var(--fontSize-Base);
 }
 
 .toolbar {
     flex: none;
     display: flex;
-    gap: var(--spacing-Half);
-    margin-bottom: var(--spacing-Half);
+    gap: 1px;
+    border-bottom: 1px solid var(--colors-ContrastDark);
 }
 
 .search {
@@ -25,21 +27,65 @@
 }
 
 .scroll {
+    position: relative;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
 }
 
+/* while a search or filter is loading, the previous tree stays visible but dimmed */
+.isReloading {
+    opacity: .35;
+    pointer-events: none;
+    transition: opacity var(--transition-Default);
+}
+
+.progress {
+    position: sticky;
+    z-index: 1;
+    top: 0;
+    height: 2px;
+    margin-bottom: -2px;
+    overflow: hidden;
+    background-color: rgba(0, 173, 238, .15);
+}
+
+.progress > span {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -35%;
+    width: 35%;
+    background-color: var(--colors-PrimaryBlue);
+    animation: progress 1.1s ease-in-out infinite;
+}
+
+@keyframes progress {
+    from {
+        left: -35%;
+    }
+    to {
+        left: 100%;
+    }
+}
+
 .message {
-    padding: var(--spacing-Full) 0;
+    padding: var(--spacing-Full);
     color: #b5b5b5;
+}
+
+.tree {
+    padding: var(--spacing-Quarter) 0;
 }
 
 .tree,
 .group {
     margin: 0;
-    padding: 0;
     list-style: none;
+}
+
+.group {
+    padding: 0;
 }
 
 .row {
@@ -48,6 +94,7 @@
     gap: var(--spacing-Half);
     height: 34px;
     padding-right: var(--spacing-Half);
+    padding-left: var(--spacing-Half);
     cursor: default;
 }
 
@@ -56,23 +103,19 @@
 }
 
 .row:hover {
-    background-color: var(--colors-ContrastNeutral);
+    background-color: var(--colors-ContrastDarker);
 }
 
-.rowIsSelected {
-    background-color: rgba(0, 173, 238, .12);
-}
-
-.rowIsSelected:hover {
-    background-color: rgba(0, 173, 238, .2);
-}
-
+/* selected nodes are marked with a neos blue bar on the left */
+.rowIsSelected,
 .rowIsNewlySelected {
-    background-color: rgba(0, 163, 56, .14);
+    background-color: var(--colors-ContrastDarker);
+    box-shadow: inset 3px 0 0 var(--colors-PrimaryBlue);
 }
 
+.rowIsSelected:hover,
 .rowIsNewlySelected:hover {
-    background-color: rgba(0, 163, 56, .22);
+    background-color: var(--colors-ContrastNeutral);
 }
 
 .chevron {
@@ -163,58 +206,4 @@
 
 .stateIsNew {
     color: var(--colors-Success);
-}
-
-/* select and deselect look like the neos ui buttons ("brand" and "error" hover style), same size as the state they replace */
-.selectButton,
-.deselectButton {
-    flex: none;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-width: 90px;
-    height: 26px;
-    padding: 0 var(--spacing-Half);
-    border: 0;
-    color: var(--colors-ContrastBrightest);
-    font: inherit;
-    font-size: var(--fontSize-Small);
-    cursor: pointer;
-    transition: background-color var(--transition-Default);
-}
-
-.selectButton {
-    background-color: var(--colors-PrimaryBlue);
-}
-
-.selectButton:hover,
-.selectButton:focus {
-    background-color: var(--colors-PrimaryBlueHover);
-}
-
-.deselectButton {
-    background-color: var(--colors-ContrastNeutral);
-}
-
-.deselectButton:hover,
-.deselectButton:focus {
-    background-color: var(--colors-Error);
-}
-
-.selectButton:focus,
-.deselectButton:focus {
-    outline: none;
-}
-
-.row:hover .selectButton,
-.selectButton:focus,
-.row:hover .deselectButton,
-.deselectButton:focus {
-    display: inline-flex;
-}
-
-/* selected rows show their state, on hover the action to deselect them (if deselecting is allowed) */
-.rowIsDeselectable:hover .state {
-    display: none;
 }

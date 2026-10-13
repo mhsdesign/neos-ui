@@ -8,6 +8,7 @@ import {ReferencesItem, ReferencesItemSkeleton} from '../../presentation/Referen
 import {IReferences} from '../../domain';
 import {translate} from '@neos-project/neos-ui-i18n';
 import {useDispatch} from 'react-redux';
+import {createDimensionSpacePointFromLegacyDimension} from '@neos-project/neos-ui-contentrepository/src/DimensionSpace';
 import {ReferencesPropertiesDialog} from '../ReferencesPropertiesDialog';
 import {useLatestState} from '@neos-project/framework-observable-react';
 import {createState, State} from '@neos-project/framework-observable';
@@ -139,6 +140,24 @@ const InspectorReferencesEditor: React.FC<any> = (props) => {
 
     const onMove = React.useCallback((fromIndex: number, toIndex: number) => editor$.update(editor => editor.withMovedReference(fromIndex, toIndex)), [editor$]);
 
+    // navigating the content canvas would lose unapplied inspector changes
+    const inspectorIsDirty = useSelector(selectors.UI.Inspector.isDirty);
+
+    const onOpen = React.useCallback((referenceTargetId: string) => {
+        if (!selectedNodeId || !dimension || !workspaceName || inspectorIsDirty) {
+            return;
+        }
+        // todo let the backend deliver a preview uri (closest document for content nodes)
+        const {contentRepositoryId} = JSON.parse(selectedNodeId.contextPath);
+        const nodeAddress = JSON.stringify({
+            contentRepositoryId,
+            workspaceName,
+            dimensionSpacePoint: createDimensionSpacePointFromLegacyDimension(dimension),
+            aggregateId: referenceTargetId
+        });
+        dispatch(actions.UI.ContentCanvas.setSrc(`/neos/preview?node=${encodeURIComponent(nodeAddress)}`));
+    }, [selectedNodeId, dimension, workspaceName, inspectorIsDirty]);
+
     const [isPickerOpen, setIsPickerOpen] = React.useState(false);
 
     const {allowedNodeTypes, baseNodeTypeFilter, maxItems} = getTreeRestrictions(editor.isLoading() ? {} : editor.getConstraints(), props.options);
@@ -174,6 +193,8 @@ const InspectorReferencesEditor: React.FC<any> = (props) => {
                             hasPropertySchema={hasPropertySchema}
                             onMove={onMove}
                             onEdit={() => onEdit(reference.targetNodeId)}
+                            onOpen={() => onOpen(reference.targetNodeId)}
+                            openIsDisabled={inspectorIsDirty}
                             onRemove={() => onDelete(reference.targetNodeId)}
                         />
                     ))}

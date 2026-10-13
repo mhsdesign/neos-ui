@@ -454,6 +454,12 @@
             <trans-unit id="referencesEditor.relation" xml:space="preserve">
                 <source>Relation</source>
             </trans-unit>
+            <trans-unit id="referencesEditor.goToNode" xml:space="preserve">
+                <source>Go to node</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.goToNodeDisabled" xml:space="preserve">
+                <source>Apply or discard your changes first</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

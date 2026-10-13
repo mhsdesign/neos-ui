@@ -39,8 +39,10 @@
 }
 
 .source {
-    flex: none;
-    width: 220px;
+    /* the same width as the targets, both shrink equally on small screens */
+    flex: 0 1 auto;
+    width: 260px;
+    min-width: 0;
     gap: 6px;
 }
 
@@ -79,9 +81,10 @@
 }
 
 .targets {
-    flex: 1;
-    /* the dialog takes the width of its contents, so the list needs one */
-    min-width: 280px;
+    /* the same width as the source, both shrink equally on small screens */
+    flex: 0 1 auto;
+    width: 260px;
+    min-width: 0;
     gap: 6px;
 }
 

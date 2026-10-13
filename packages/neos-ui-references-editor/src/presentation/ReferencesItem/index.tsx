@@ -21,30 +21,14 @@ interface ReferencesItemProps {
     isNew?: boolean;
     onMove: (fromIndex: number, toIndex: number) => void;
     onEdit?: () => void;
+    // navigates to the referenced node, not offered where leaving the page makes no sense (e.g. in dialogs)
+    onOpen?: () => void;
+    openIsDisabled?: boolean;
     onRemove: () => void;
 }
 
 const hasPropertyValues = (properties: unknown): boolean =>
     Boolean(properties) && Object.values(properties as object).some(value => value !== null && value !== undefined && value !== '');
-
-const ActionButton: React.FC<{
-    icon: string;
-    title: string;
-    onClick: () => void;
-    disabled?: boolean;
-    isDestructive?: boolean;
-}> = ({icon, title, onClick, disabled, isDestructive}) => (
-    <button
-        type="button"
-        className={cx(style.action, {[style.actionDestructive]: isDestructive})}
-        title={title}
-        aria-label={title}
-        disabled={disabled}
-        onClick={onClick}
-    >
-        <Icon icon={icon} />
-    </button>
-);
 
 export const ReferencesItem: React.FC<ReferencesItemProps> = (props) => {
     const {reference, index, isSortable, onMove} = props;
@@ -169,14 +153,24 @@ export const ReferencesItem: React.FC<ReferencesItemProps> = (props) => {
                 {props.hasPropertySchema && props.onEdit ? (
                     <ActionButton
                         icon="sliders-h"
-                        title={translate('Neos.Neos.Ui:Main:referencesEditor.editProperties', 'Edit relation properties')}
+                        label={translate('Neos.Neos.Ui:Main:referencesEditor.editProperties', 'Edit relation properties')}
                         onClick={props.onEdit}
+                    />
+                ) : null}
+                {props.onOpen ? (
+                    <ActionButton
+                        icon="external-link-alt"
+                        label={props.openIsDisabled
+                            ? translate('Neos.Neos.Ui:Main:referencesEditor.goToNodeDisabled', 'Apply or discard your changes first')
+                            : translate('Neos.Neos.Ui:Main:referencesEditor.goToNode', 'Go to node')}
+                        disabled={props.openIsDisabled}
+                        onClick={props.onOpen}
                     />
                 ) : null}
                 <ActionButton
                     icon="times"
-                    title={translate('Neos.Neos.Ui:Main:referencesEditor.remove', 'Remove reference')}
-                    isDestructive
+                    label={translate('Neos.Neos.Ui:Main:referencesEditor.remove', 'Remove reference')}
+                    isDestructive={true}
                     onClick={handleRemove}
                 />
             </span>
@@ -211,6 +205,26 @@ export const ReferencesItem: React.FC<ReferencesItemProps> = (props) => {
         </div>
     );
 };
+
+const ActionButton: React.FC<{
+    icon: string;
+    label: string;
+    disabled?: boolean;
+    isDestructive?: boolean;
+    onClick(): void;
+}> = ({icon, label, disabled, isDestructive, onClick}) => (
+    <button
+        type="button"
+        className={cx(style.action, {[style.actionIsDestructive]: isDestructive})}
+        title={label}
+        aria-label={label}
+        // aria-disabled instead of disabled, so the title still explains why
+        aria-disabled={disabled}
+        onClick={disabled ? undefined : onClick}
+    >
+        <Icon icon={icon} />
+    </button>
+);
 
 export const ReferencesItemSkeleton: React.FC = () => (
     <div className={cx(style.item, style.skeleton)} aria-busy="true">

@@ -141,7 +141,9 @@
     display: flex;
     flex: none;
     align-items: center;
-    gap: 2px;
+    overflow: hidden;
+    border-radius: 2px;
+    background-color: var(--colors-ContrastNeutral);
     opacity: 0;
     transition: opacity var(--transition-Default);
 }
@@ -151,41 +153,42 @@
     opacity: 1;
 }
 
-/* same hover behaviour as the IconButton hover styles "brand" and "error" */
+/* one compact group, the buttons are separated by dividers */
 .action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 28px;
     padding: 0;
     border: 0;
     background-color: transparent;
-    color: var(--colors-ContrastBrighter);
-    font-size: 14px;
+    color: #d0d0d0;
+    font-size: 13px;
     cursor: pointer;
     transition: background-color var(--transition-Default), color var(--transition-Default);
+}
+
+.action + .action {
+    box-shadow: inset 1px 0 0 #2b2b2b;
 }
 
 .action:hover,
 .action:focus-visible {
     background-color: var(--colors-PrimaryBlue);
     color: var(--colors-ContrastBrightest);
-}
-
-.actionDestructive:hover,
-.actionDestructive:focus-visible {
-    background-color: var(--colors-Error);
-}
-
-.action:focus-visible {
     outline: none;
 }
 
-.action:disabled {
+.actionIsDestructive:hover,
+.actionIsDestructive:focus-visible {
+    background-color: var(--colors-Error);
+}
+
+.action[aria-disabled="true"] {
     background-color: transparent;
     color: #6b6b6b;
-    cursor: default;
+    cursor: not-allowed;
 }
 
 /* replaces the item content while the removal of a reference with properties is confirmed */

@@ -394,6 +394,54 @@
             <trans-unit id="emptyCollection" xml:space="preserve">
                 <source>Add content</source>
             </trans-unit>
+            <trans-unit id="nodeTree.loading" xml:space="preserve">
+                <source>Loading node tree…</source>
+            </trans-unit>
+            <trans-unit id="nodeTree.couldNotLoad" xml:space="preserve">
+                <source>The node tree could not be loaded.</source>
+            </trans-unit>
+            <trans-unit id="nodeTree.selected" xml:space="preserve">
+                <source>Selected</source>
+            </trans-unit>
+            <trans-unit id="nodeTree.added" xml:space="preserve">
+                <source>Added</source>
+            </trans-unit>
+            <trans-unit id="nodeTree.expand" xml:space="preserve">
+                <source>Expand</source>
+            </trans-unit>
+            <trans-unit id="nodeTree.collapse" xml:space="preserve">
+                <source>Collapse</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.add" xml:space="preserve">
+                <source>Add reference</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.pickerTitle" xml:space="preserve">
+                <source>Select references</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.selectedHeader" xml:space="preserve">
+                <source>Selected</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.nothingSelected" xml:space="preserve">
+                <source>Nothing selected yet. Pick nodes in the tree.</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.new" xml:space="preserve">
+                <source>new</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.reorder" xml:space="preserve">
+                <source>Drag or use arrow keys to reorder</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.editProperties" xml:space="preserve">
+                <source>Edit relation properties</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.hasProperties" xml:space="preserve">
+                <source>Has relation properties</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.remove" xml:space="preserve">
+                <source>Remove reference</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.referencesTo" xml:space="preserve">
+                <source>references</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

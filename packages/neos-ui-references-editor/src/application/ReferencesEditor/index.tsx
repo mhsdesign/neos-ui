@@ -15,15 +15,22 @@ import {Editor} from '../../domain/Editor/Editor';
 import {Icon} from '@neos-project/react-ui-components';
 import {ReferencesPickerDialog} from '../ReferencesPickerDialog';
 import {NeosContext} from '@neos-project/neos-ui-decorators';
+import {StandaloneReferencesEditor} from './StandaloneReferencesEditor';
+import {getTreeRestrictions, STARTING_POINT} from './treeRestrictions';
 import style from './style.module.css';
-
-// todo make configurable via editor options
-const STARTING_POINT = '/<Neos.Neos:Sites>/';
 
 // the inspector unmounts the editors when switching tabs, while a change is pending the editor state (incl. the presentation of added references) is kept here
 const pendingEditorStates = new Map<string, State<Editor>>();
 
-export const createReferencesEditor = () => (props) => {
+// the inspector passes a summary of the stored references, other places like the node creation dialog a list of node ids
+const isInspectorValue = (value: unknown): value is {referencesCount: number} =>
+    typeof value === 'object' && value !== null && !Array.isArray(value) && 'referencesCount' in value;
+
+export const createReferencesEditor = () => (props: any) => isInspectorValue(props.value)
+    ? <InspectorReferencesEditor {...props} />
+    : <StandaloneReferencesEditor {...props} />;
+
+const InspectorReferencesEditor: React.FC<any> = (props) => {
     const workspaceName = useSelector(selectors.CR.Workspaces.personalWorkspaceNameSelector);
     const dimension = useSelector(selectors.CR.ContentDimensions.active);
     const selectedNodeId = useSelector(selectors.CR.Nodes.focusedSelector);
@@ -134,16 +141,7 @@ export const createReferencesEditor = () => (props) => {
 
     const [isPickerOpen, setIsPickerOpen] = React.useState(false);
 
-    const constraints = editor.isLoading() ? {} : editor.getConstraints();
-    const allowedNodeTypes = React.useMemo(() => {
-        const fromConstraints = Object.entries(constraints?.nodeTypes ?? {})
-            .filter(([nodeTypeName, isAllowed]) => nodeTypeName !== '*' && isAllowed === true)
-            .map(([nodeTypeName]) => nodeTypeName);
-        return fromConstraints.length > 0 ? fromConstraints : (props.options?.nodeTypes ?? []);
-    }, [constraints, props.options?.nodeTypes]);
-    const maxItems: number | undefined = constraints?.maxItems;
-    // restrict the tree to documents and the referencable node types, so that e.g. content collections are not shown
-    const baseNodeTypeFilter = allowedNodeTypes.length > 0 ? ['Neos.Neos:Document', ...allowedNodeTypes].join(',') : '';
+    const {allowedNodeTypes, baseNodeTypeFilter, maxItems} = getTreeRestrictions(editor.isLoading() ? {} : editor.getConstraints(), props.options);
 
     if (fetch__referencesSummary.error) {
         return <ErrorView error={fetch__referencesSummary.error} />;

@@ -114,7 +114,7 @@ export const TreeNode: React.FC<{
                     <button
                         type="button"
                         className={style.chevron}
-                        aria-label={isExpanded ? translate('Neos.Neos:Main:collapse', 'Collapse') : translate('Neos.Neos:Main:expand', 'Expand')}
+                        aria-label={isExpanded ? translate('Neos.Neos.Ui:Main:nodeTree.collapse', 'Collapse') : translate('Neos.Neos.Ui:Main:nodeTree.expand', 'Expand')}
                         onClick={event => {
                             event.stopPropagation();
                             toggle();

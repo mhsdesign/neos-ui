@@ -9,3 +9,4 @@
  */
 export {NodeTypeFilterOptionDTO} from './NodeTypeFilterOptionDTO';
 export {TreeNodeDTO} from './TreeNodeDTO';
+export {TreeDataSource} from './TreeDataSource';

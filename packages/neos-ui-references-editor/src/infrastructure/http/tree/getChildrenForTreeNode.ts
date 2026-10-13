@@ -9,60 +9,49 @@
  */
 import {fetchWithErrorHandling} from '@neos-project/neos-ui-backend-connector';
 
-import {TreeNodeDTO} from '../../domain';
+import {TreeNodeDTO} from '@neos-project/neos-ui-link-editor-custom-node-tree';
 import {ServerSideError} from '@neos-project/neos-ui-error';
 import {createDimensionSpacePointFromLegacyDimension} from '@neos-project/neos-ui-contentrepository/src/DimensionSpace';
 
-type GetTreeQuery = {
+type GetChildrenForTreeNodeQuery = {
     workspaceName: string;
     legacyDimensionValues: Record<string, string[]>;
-    startingPoint: string;
-    loadingDepth: number;
-    baseNodeTypeFilter: string;
-    allowedNodeTypes?: string[];
-    narrowNodeTypeFilter: string;
-    searchTerm: string;
-    selectedNodeIds?: string[];
+    treeNodeId: string;
+    nodeTypeFilter: string;
+    allowedNodeTypes?: string[]
 };
 
-type GetTreeQueryResultEnvelope =
+type GetChildrenForTreeNodeQueryResultEnvelope =
     | {
           success: {
-              root: TreeNodeDTO;
+              children: TreeNodeDTO[];
           };
       }
     | {
           error: ServerSideError;
       };
 
-export async function getTree(
-    query: GetTreeQuery
-): Promise<GetTreeQueryResultEnvelope> {
+export async function getChildrenForTreeNode(
+    query: GetChildrenForTreeNodeQuery
+): Promise<GetChildrenForTreeNodeQueryResultEnvelope> {
     const searchParams = new URLSearchParams();
-    const dimensionSpacePoint = createDimensionSpacePointFromLegacyDimension(query.legacyDimensionValues);
+
+    const dimensionSpacePoint = createDimensionSpacePointFromLegacyDimension(query.legacyDimensionValues)
 
     searchParams.set('workspaceName', query.workspaceName);
-    searchParams.set('dimensionSpacePoint', JSON.stringify(dimensionSpacePoint));
-    searchParams.set('startingPoint', query.startingPoint);
-    searchParams.set('loadingDepth', String(query.loadingDepth));
-    searchParams.set('baseNodeTypeFilter', query.baseNodeTypeFilter);
+    searchParams.set('dimensionSpacePoint', JSON.stringify(dimensionSpacePoint))
+    searchParams.set('treeNodeId', query.treeNodeId);
+    searchParams.set('nodeTypeFilter', query.nodeTypeFilter);
 
     for (const allowedNodeType of query.allowedNodeTypes ?? []) {
         searchParams.append(`allowedNodeTypes[]`, allowedNodeType);
-    }
-
-    searchParams.set('narrowNodeTypeFilter', query.narrowNodeTypeFilter);
-    searchParams.set('searchTerm', query.searchTerm);
-
-    for (const referenceId of query.selectedNodeIds ?? []) {
-        searchParams.append(`referenceIds[]`, referenceId);
     }
 
     try {
         const response = await fetchWithErrorHandling.withCsrfToken(
             (csrfToken) => ({
                 url:
-                    '/neos/references-editor/get-tree?' +
+                    '/neos/references-editor/get-children-for-tree-node?' +
                     searchParams.toString(),
                 method: 'GET',
                 credentials: 'include',

@@ -11,7 +11,7 @@ import React from 'react';
 import {usePromise} from '@neos-project/framework-promise-react';
 
 import {selectors, useSelector} from '@neos-project/neos-ui-redux-store';
-import {Tree} from '@neos-project/neos-ui-link-editor-custom-node-tree';
+import {Tree, createLinkEditorTreeDataSource} from '@neos-project/neos-ui-link-editor-custom-node-tree';
 
 import {ILink, ILinkType} from '../../../domain';
 import {IconCard} from '../../../presentation';
@@ -169,6 +169,22 @@ export const Node: ILinkType<NodeLinkModel, NodeLinkOptions> = {
                 () => options.startingPoint ?? siteNodeAggregateId,
                 [options.startingPoint, siteNodeAggregateId]
             );
+        // only the initially selected node is used to expand the tree, so selecting a node does not reload it
+        const initiallySelectedNodeId = React.useRef(model?.nodeId ?? undefined).current;
+        const loadingDepth = options.loadingDepth ?? defaultLoadingDepth;
+        const baseNodeTypeFilter = options.baseNodeType ?? 'Neos.Neos:Document';
+        const dataSource = React.useMemo(
+                () => startingPoint && workspaceName && legacyDimensionValues ? createLinkEditorTreeDataSource({
+                    workspaceName,
+                    legacyDimensionValues,
+                    startingPoint,
+                    loadingDepth,
+                    baseNodeTypeFilter,
+                    linkableNodeTypes: options.allowedNodeTypes,
+                    selectedNodeId: initiallySelectedNodeId
+                }) : null,
+                [workspaceName, legacyDimensionValues, startingPoint, loadingDepth, baseNodeTypeFilter, options.allowedNodeTypes]
+            );
 
         if (!startingPoint) {
             throw createError(
@@ -182,24 +198,24 @@ export const Node: ILinkType<NodeLinkModel, NodeLinkOptions> = {
             throw createError(
                     'Could not load node tree, because dimensionValues could not be determined.'
                 );
-        } else {
-            return <Tree
-                initialSearchTerm={initialSearchTerm}
-                workspaceName={workspaceName}
-                legacyDimensionValues={legacyDimensionValues}
-                startingPoint={startingPoint}
-                loadingDepth={options.loadingDepth ?? defaultLoadingDepth}
-                baseNodeTypeFilter={options.baseNodeType ?? 'Neos.Neos:Document'}
-                initialNarrowNodeTypeFilter={initialNarrowNodeTypeFilter}
-                linkableNodeTypes={options.allowedNodeTypes}
-                selectedTreeNodeId={model?.nodeId ?? undefined}
-                options={{
-                    enableSearch: true,
-                    enableNodeTypeFilter: true
-                }}
-                onSelect={setNodeId}
-            />;
+        } else if (dataSource) {
+            return (
+                <div style={{height: 'min(50vh, 400px)'}}>
+                    <Tree
+                        dataSource={dataSource}
+                        initialSearchTerm={initialSearchTerm}
+                        initialNarrowNodeTypeFilter={initialNarrowNodeTypeFilter}
+                        selectedNodeIds={model?.nodeId ? [model.nodeId] : []}
+                        options={{
+                            enableSearch: true,
+                            enableNodeTypeFilter: true
+                        }}
+                        onSelect={treeNode => setNodeId(treeNode.nodeAggregateIdentifier)}
+                    />
+                </div>
+            );
         }
+        return null;
     },
 
     AdvancedEditor: ({model$}: { model$: State<NodeLinkModel | null> }) => {

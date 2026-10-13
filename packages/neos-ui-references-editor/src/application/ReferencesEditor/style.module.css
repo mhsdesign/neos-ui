@@ -1,0 +1,37 @@
+.list {
+    display: flex;
+    flex-direction: column;
+}
+
+/* looks like the regular neos ui button with the "brand" hover style */
+.addButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-Half);
+    width: 100%;
+    height: var(--spacing-GoldenUnit);
+    margin-top: var(--spacing-Half);
+    padding: 0 var(--spacing-Full);
+    border: 0;
+    background-color: var(--colors-ContrastNeutral);
+    color: var(--colors-ContrastBrightest);
+    font: inherit;
+    font-size: var(--fontSize-Base);
+    cursor: pointer;
+    transition: background-color var(--transition-Default);
+}
+
+.addButton:hover:enabled,
+.addButton:focus-visible:enabled {
+    background-color: var(--colors-PrimaryBlue);
+}
+
+.addButton:focus-visible {
+    outline: none;
+}
+
+.addButton:disabled {
+    cursor: default;
+    opacity: .5;
+}

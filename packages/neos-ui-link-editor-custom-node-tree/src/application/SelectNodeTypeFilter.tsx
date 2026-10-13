@@ -12,7 +12,7 @@ import {usePromise} from '@neos-project/framework-promise-react';
 
 import {SelectBox} from '@neos-project/react-ui-components';
 
-import {getNodeTypeFilterOptions} from '../infrastructure/http';
+import {TreeDataSource} from '../domain';
 import {translate} from '@neos-project/neos-ui-i18n';
 import {getRegistryById} from '@neos-project/neos-ui-registry';
 
@@ -30,7 +30,7 @@ const searchNodeTypeFilterOptions = (
     );
 
 interface Props {
-    baseNodeTypeFilter: string;
+    dataSource: TreeDataSource;
     value: string;
     onChange: (value: string) => void;
 }
@@ -38,24 +38,14 @@ interface Props {
 export const SelectNodeTypeFilter: React.FC<Props> = (props) => {
     const [filterTerm, setFilterTerm] = React.useState('');
     const fetch__options = usePromise(async () => {
-        const result = await getNodeTypeFilterOptions({
-            baseNodeTypeFilter: props.baseNodeTypeFilter
-        });
+        const options = await props.dataSource.getNodeTypeFilterOptions();
 
-        if ('success' in result) {
-            return result.success.options.map((option) => ({
-                value: option.value,
-                icon: option.label.icon,
-                label: getRegistryById('i18n').translate(option.label.label)
-            }));
-        }
-
-        if ('error' in result) {
-            throw result.error;
-        }
-
-        throw new Error('Unable to fetch node type filter options');
-    }, [props.baseNodeTypeFilter]);
+        return options.map((option) => ({
+            value: option.value,
+            icon: option.label.icon,
+            label: getRegistryById('i18n').translate(option.label.label)
+        }));
+    }, [props.dataSource]);
     const options = React.useMemo(() => {
         return searchNodeTypeFilterOptions(
             filterTerm,

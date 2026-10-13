@@ -40,11 +40,34 @@ export class Editor {
     }
 
     public withRemovedReference(referenceTargetId: string): Editor {
-        const {[referenceTargetId]: _, ...otherReferences} = this.data.transientValues ?? this.data.initialValues;
+        const otherReferences = {...(this.data.transientValues ?? this.data.initialValues)};
+        delete otherReferences[referenceTargetId];
 
         return new Editor({
             ...this.data,
             transientValues: otherReferences
+        })
+    }
+
+    public withReferences(references: IReferences): Editor {
+        return new Editor({
+            ...this.data,
+            transientValues: references
+        })
+    }
+
+    public withMovedReference(fromIndex: number, toIndex: number): Editor {
+        const entries = Object.entries(this.data.transientValues ?? this.data.initialValues ?? {});
+        if (fromIndex === toIndex || !entries[fromIndex] || toIndex < 0 || toIndex >= entries.length) {
+            return this;
+        }
+        const [moved] = entries.splice(fromIndex, 1);
+        entries.splice(toIndex, 0, moved);
+
+        // todo object key order is only reliable for non integer-like ids, see reference model rework
+        return new Editor({
+            ...this.data,
+            transientValues: Object.fromEntries(entries)
         })
     }
 
@@ -66,7 +89,7 @@ export class Editor {
         })
     }
 
-    public withAddedReferencePresentation(targetNodeId: string, referencePresentation: IReference["presentation"]): Editor {
+    public withAddedReferencePresentation(targetNodeId: string, referencePresentation: IReference['presentation']): Editor {
         // unapplied changes
         if (this.data.transientValues && Object.keys(this.data.transientValues).includes(targetNodeId)) {
             return new Editor({
@@ -93,6 +116,28 @@ export class Editor {
             })
         }
         return this;
+    }
+
+    /**
+     * Applies the properties of several references at once (the properties dialog can page through all references)
+     */
+    public withAppliedPropertiesForReferences(propertiesByTargetNodeId: Record<string, Record<string, unknown>>): Editor {
+        const references = this.data.transientValues ?? this.data.initialValues ?? {};
+        return new Editor({
+            ...this.data,
+            isReferencePropertyEditingOpen: false,
+            transientReferencePropertyValues: undefined as any,
+            transientValues: Object.fromEntries(Object.entries(references).map(([targetNodeId, reference]) => [
+                targetNodeId,
+                targetNodeId in propertiesByTargetNodeId
+                    ? {...reference, properties: propertiesByTargetNodeId[targetNodeId]}
+                    : reference
+            ]))
+        })
+    }
+
+    public getSelectedReferenceId(): string | undefined {
+        return this.data.selectedReferenceId;
     }
 
     public withDismissedReferencePropertyEditing(): Editor {
@@ -177,6 +222,16 @@ export class Editor {
         return this.data.transientValues ?? this.data.initialValues ?? {};
     }
 
+    public getReferenceInPropertyEditing(): IReference | undefined {
+        return this.data.isReferencePropertyEditingOpen
+            ? this.getReferences()[this.data.selectedReferenceId]
+            : undefined;
+    }
+
+    public getConstraints(): any {
+        return this.data.constraints ?? {};
+    }
+
     public getPropertySchema(): any {
         return this.data.propertySchema ?? {};
     }
@@ -185,10 +240,9 @@ export class Editor {
         return (this.data.transientReferencePropertyValues ?? this.data.transientValues ?? this.data.initialValues)[this.data.selectedReferenceId]?.properties?.[propertyName]
     }
 
-    public getSelectedNodeIds(): string[]
-    {
+    public getSelectedNodeIds(): string[] {
         // todo memo value
-        return Object.keys(this.data.transientValues ?? this.data.initialValues)
+        return Object.keys(this.data.transientValues ?? this.data.initialValues ?? {})
     }
 
     public getChange(nodeAddress: string, referenceName: string): Change | null {

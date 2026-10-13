@@ -1,0 +1,205 @@
+.title {
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 24px;
+}
+
+/* from | relation | to, read from left to right */
+.layout {
+    display: flex;
+    align-items: stretch;
+    height: 56vh;
+    max-height: 440px;
+    padding: 24px 0;
+    border-top: 1px solid var(--colors-ContrastDark);
+    font-size: var(--fontSize-Base);
+}
+
+.column {
+    /* the widths below are meant without the padding */
+    box-sizing: content-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    padding: 0 24px;
+}
+
+.column + .column {
+    border-left: 1px solid var(--colors-ContrastDark);
+}
+
+.caption {
+    flex: none;
+    font-size: 11px;
+    line-height: 20px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--colors-ContrastBright);
+}
+
+.source {
+    /* the same width as the targets, both shrink equally on small screens */
+    flex: 0 1 auto;
+    width: 260px;
+    min-width: 0;
+    gap: 6px;
+}
+
+.sourceNode {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-Half);
+    line-height: 20px;
+    color: var(--colors-ContrastBrightest);
+    overflow-wrap: anywhere;
+}
+
+.sourceIcon {
+    flex: none;
+    width: 16px;
+    display: inline-flex;
+    justify-content: center;
+    color: var(--colors-ContrastBrighter);
+}
+
+.sourceNodeType {
+    padding-left: 24px;
+    font-size: var(--fontSize-Small);
+    color: #b5b5b5;
+}
+
+.relation {
+    flex: none;
+    width: 340px;
+    overflow-y: auto;
+    gap: var(--spacing-Full);
+}
+
+.property > * {
+    margin-bottom: 0;
+}
+
+.targets {
+    /* the same width as the source, both shrink equally on small screens */
+    flex: 0 1 auto;
+    width: 260px;
+    min-width: 0;
+    gap: 6px;
+}
+
+.targetList {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* a reference, the selected one is expanded and shows its path */
+.target {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid #2e2e2e;
+    background-color: transparent;
+    color: var(--colors-ContrastBrightest);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--transition-Default);
+}
+
+.target:hover {
+    background-color: #292929;
+}
+
+.target:focus-visible {
+    outline: 1px solid var(--colors-PrimaryBlue);
+    outline-offset: -1px;
+}
+
+.targetIsSelected,
+.targetIsSelected:hover {
+    background-color: #2b2b2b;
+    box-shadow: inset 3px 0 0 var(--colors-PrimaryBlue);
+}
+
+.targetHead {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+}
+
+.targetIcon {
+    position: relative;
+    flex: none;
+    width: 16px;
+    display: inline-flex;
+    justify-content: center;
+    color: var(--colors-ContrastBrighter);
+}
+
+.targetIsSelected .targetIcon {
+    color: var(--colors-PrimaryBlue);
+}
+
+.targetIsSelected .targetIcon svg {
+    color: var(--colors-PrimaryBlue);
+}
+
+.targetLabel {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.targetPath {
+    display: block;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 10px 0 36px;
+    opacity: 0;
+    font-size: var(--fontSize-Small);
+    line-height: 16px;
+    color: #b5b5b5;
+    transition: max-height var(--transition-Default), opacity var(--transition-Default), padding var(--transition-Default);
+}
+
+.targetIsSelected .targetPath {
+    max-height: 32px;
+    padding-bottom: 10px;
+    opacity: 1;
+}
+
+/* relation properties indicator, the same as in the references list */
+.badge {
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background-color: var(--colors-PrimaryBlue);
+    box-shadow: 0 0 0 2px var(--colors-ContrastDarker);
+    color: var(--colors-ContrastDarkest);
+    font-size: 6px;
+}
+
+.target:hover .badge {
+    box-shadow: 0 0 0 2px #292929;
+}
+
+.targetIsSelected .badge,
+.targetIsSelected:hover .badge {
+    box-shadow: 0 0 0 2px #2b2b2b;
+}
+
+.badge svg {
+    color: var(--colors-ContrastDarkest);
+}

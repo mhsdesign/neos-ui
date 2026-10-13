@@ -435,4 +435,78 @@ describe('Editor', () => {
             }
         });
     })
+
+    test('move reference and queue change', () => {
+        const reference = (targetNodeId: string) => ({targetNodeId, properties: null, presentation: undefined});
+        const editor = Editor.fromLoadingState(3).withReferencesAndConfiguration(
+            {
+                'a': reference('a'),
+                'b': reference('b'),
+                'c': reference('c')
+            },
+            {},
+            {}
+        ).withMovedReference(2, 0);
+
+        expect(Object.keys(editor.getReferences())).toStrictEqual(['c', 'a', 'b']);
+        expect(editor.getChange('nodeid', 'myRef')).toStrictEqual({
+            type: 'Neos.Neos.Ui:Reference',
+            subject: 'nodeid',
+            payload: {
+                referenceName: 'myRef',
+                serializedReferences: [
+                    {targetNodeId: 'c', properties: null},
+                    {targetNodeId: 'a', properties: null},
+                    {targetNodeId: 'b', properties: null}
+                ]
+            }
+        });
+    })
+
+    test('replace references from picker and queue change', () => {
+        const reference = (targetNodeId: string) => ({targetNodeId, properties: null, presentation: undefined});
+        const editor = Editor.fromLoadingState(2).withReferencesAndConfiguration(
+            {'a': reference('a'), 'b': reference('b')},
+            {},
+            {}
+        ).withReferences({'b': reference('b'), 'c': reference('c')});
+
+        expect(Object.keys(editor.getReferences())).toStrictEqual(['b', 'c']);
+        expect(editor.getChange('nodeid', 'myRef')?.payload.serializedReferences).toStrictEqual([
+            {targetNodeId: 'b', properties: null},
+            {targetNodeId: 'c', properties: null}
+        ]);
+        expect(Object.keys(editor.withDiscard().getReferences())).toStrictEqual(['a', 'b']);
+    })
+
+    test('apply properties of several references and queue change', () => {
+        const reference = (targetNodeId: string, properties: any) => ({targetNodeId, properties, presentation: undefined});
+        const editor = Editor.fromLoadingState(3).withReferencesAndConfiguration(
+            {'a': reference('a', null), 'b': reference('b', {note: 'old'}), 'c': reference('c', {note: 'keep'})},
+            {},
+            {note: {type: 'string'}}
+        ).withReferencePropertyEditing('a').withAppliedPropertiesForReferences({
+            'a': {note: 'new a'},
+            'b': {note: 'new b'}
+        });
+
+        expect(editor.isReferencePropertyEditingOpen()).toBe(false);
+        expect(editor.getChange('nodeid', 'myRef')?.payload.serializedReferences).toStrictEqual([
+            {targetNodeId: 'a', properties: {note: 'new a'}},
+            {targetNodeId: 'b', properties: {note: 'new b'}},
+            {targetNodeId: 'c', properties: {note: 'keep'}}
+        ]);
+    })
+
+    test('move reference out of bounds is ignored', () => {
+        const editor = Editor.fromLoadingState(1).withReferencesAndConfiguration(
+            {'a': {targetNodeId: 'a', properties: null, presentation: undefined}},
+            {},
+            {}
+        );
+
+        expect(editor.withMovedReference(0, 1)).toBe(editor);
+        expect(editor.withMovedReference(0, 0)).toBe(editor);
+        expect(editor.withMovedReference(3, 0)).toBe(editor);
+    })
 })

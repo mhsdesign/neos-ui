@@ -8,6 +8,7 @@
  * source code.
  */
 import {fetchWithErrorHandling} from '@neos-project/neos-ui-backend-connector';
+import {createDimensionSpacePointFromLegacyDimension} from '@neos-project/neos-ui-contentrepository/src/DimensionSpace';
 
 type GetNodeSummaryQuery = {
     workspaceName: string;
@@ -41,16 +42,10 @@ export async function getNodeSummary(
     const searchParams = new URLSearchParams();
 
     searchParams.set('workspaceName', query.workspaceName);
-    for (const [dimensionName, fallbackChain] of Object.entries(
-        query.dimensionValues
-    )) {
-        for (const fallbackValue of fallbackChain) {
-            searchParams.set(
-                `dimensionValues[${dimensionName}][]`,
-                fallbackValue
-            );
-        }
-    }
+    searchParams.set(
+        'dimensionSpacePoint',
+        JSON.stringify(createDimensionSpacePointFromLegacyDimension(query.dimensionValues))
+    );
     searchParams.set('nodeId', query.nodeId);
 
     try {

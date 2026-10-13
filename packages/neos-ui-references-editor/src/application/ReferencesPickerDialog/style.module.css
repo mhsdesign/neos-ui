@@ -1,0 +1,51 @@
+.title {
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 24px;
+}
+
+.body {
+    display: flex;
+    height: 58vh;
+    max-height: 600px;
+    border-top: 1px solid var(--colors-ContrastDark);
+    font-size: var(--fontSize-Base);
+}
+
+/* the shared node tree fills this column */
+.treeColumn {
+    flex: 1;
+    min-width: 0;
+    padding: var(--spacing-Full) 24px;
+}
+
+.listColumn {
+    flex: none;
+    width: 380px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--colors-ContrastDarker);
+    border-left: 1px solid var(--colors-ContrastDark);
+}
+
+.listHeader {
+    padding: var(--spacing-Full) var(--spacing-Full) 12px;
+}
+
+.listCount {
+    color: #b5b5b5;
+}
+
+.list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 var(--spacing-Full);
+}
+
+.listEmpty {
+    margin: 0;
+    font-size: var(--fontSize-Small);
+    line-height: 18px;
+    color: #b5b5b5;
+}

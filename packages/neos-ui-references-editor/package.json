@@ -8,12 +8,16 @@
     "@neos-project/framework-observable": "workspace:*",
     "@neos-project/framework-observable-react": "workspace:*",
     "@neos-project/framework-promise-react": "workspace:*",
+    "@neos-project/neos-ts-interfaces": "workspace:*",
+    "@neos-project/neos-ui-contentrepository": "workspace:*",
     "@neos-project/neos-ui-editors": "workspace:*",
+    "@neos-project/neos-ui-i18n": "workspace:*",
     "@neos-project/neos-ui-link-editor-custom-node-tree": "workspace:*",
-    "@neos-project/neos-ui-references-editor-custom-node-tree": "workspace:*",
     "@neos-project/positional-array-sorter": "workspace:*",
     "@neos-project/react-ui-components": "workspace:*",
     "@neos-project/utils-helpers": "workspace:*",
+    "classnames": "^2.2.3",
+    "react-dnd": "^10.0.0",
     "typesafe-actions": "^5.1.0"
   }
 }

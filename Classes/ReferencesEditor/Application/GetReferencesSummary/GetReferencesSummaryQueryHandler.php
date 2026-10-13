@@ -19,6 +19,7 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindReferencesFil
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
+use Neos\Utility\Arrays;
 use Neos\Neos\Domain\SubtreeTagging\NeosVisibilityConstraints;
 use Neos\Neos\Ui\LinkEditor\Infrastructure\ESCR\NodeService;
 use Neos\Neos\Ui\LinkEditor\Infrastructure\ESCR\NodeServiceFactory;
@@ -34,6 +35,18 @@ final class GetReferencesSummaryQueryHandler
 
     #[Flow\Inject]
     protected ContentRepositoryRegistry $contentRepositoryRegistry;
+
+    /**
+     * @var array<string,array<string,mixed>>
+     */
+    #[Flow\InjectConfiguration(path: "userInterface.inspector.dataTypes", package: "Neos.Neos")]
+    protected array $dataTypesDefaultConfiguration;
+
+    /**
+     * @var array<string,array<string,mixed>>
+     */
+    #[Flow\InjectConfiguration(path: "userInterface.inspector.editors", package: "Neos.Neos")]
+    protected array $editorDefaultConfiguration;
 
     public function handle(GetReferencesSummaryQuery $query): GetReferencesSummaryQueryResult
     {
@@ -66,9 +79,46 @@ final class GetReferencesSummaryQueryHandler
 
         return new GetReferencesSummaryQueryResult(
             references: $references,
-            propertySchema: $sourceReferenceSchema["properties"] ?? null,
+            propertySchema: isset($sourceReferenceSchema["properties"])
+                ? $this->applyDefaultEditorConfiguration($sourceReferenceSchema["properties"])
+                : null,
             constraints: $sourceReferenceSchema["constraints"] ?? null,
         );
+    }
+
+    /**
+     * The properties of references are not processed by the DefaultPropertyEditorPostprocessor,
+     * so the editor is resolved the same way here: editor defaults, then data type defaults, then the property configuration
+     *
+     * @todo move into the DefaultPropertyEditorPostprocessor of Neos.Neos
+     * @param array<string,mixed> $propertiesConfiguration
+     * @return array<string,mixed>
+     */
+    private function applyDefaultEditorConfiguration(array $propertiesConfiguration): array
+    {
+        foreach ($propertiesConfiguration as $propertyName => $propertyConfiguration) {
+            if (!is_array($propertyConfiguration) || !isset($propertyConfiguration['type'])) {
+                continue;
+            }
+            $inspectorConfiguration = $propertyConfiguration['ui']['inspector'] ?? [];
+            if (!is_array($inspectorConfiguration)) {
+                // explicitly hidden via "inspector: false"
+                continue;
+            }
+            $defaultConfigurationFromDataType = $this->dataTypesDefaultConfiguration[$propertyConfiguration['type']] ?? [];
+            $editor = $inspectorConfiguration['editor'] ?? $defaultConfigurationFromDataType['editor'] ?? null;
+            if ($editor === null) {
+                continue;
+            }
+
+            $mergedInspectorConfiguration = Arrays::arrayMergeRecursiveOverrule(
+                Arrays::arrayMergeRecursiveOverrule($this->editorDefaultConfiguration[$editor] ?? [], $defaultConfigurationFromDataType),
+                $inspectorConfiguration
+            );
+            $mergedInspectorConfiguration['editor'] = $editor;
+            $propertiesConfiguration[$propertyName]['ui']['inspector'] = $mergedInspectorConfiguration;
+        }
+        return $propertiesConfiguration;
     }
 
     private function createBreadcrumbsForNode(NodeService $nodeService, Node $node): Breadcrumbs

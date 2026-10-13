@@ -8,3 +8,4 @@
  * source code.
  */
 export {Tree} from './Tree';
+export type {TreeNodeBreadcrumb} from './TreeNode';

@@ -40,7 +40,8 @@ export class Editor {
     }
 
     public withRemovedReference(referenceTargetId: string): Editor {
-        const {[referenceTargetId]: _, ...otherReferences} = this.data.transientValues ?? this.data.initialValues;
+        const otherReferences = {...(this.data.transientValues ?? this.data.initialValues)};
+        delete otherReferences[referenceTargetId];
 
         return new Editor({
             ...this.data,
@@ -88,7 +89,7 @@ export class Editor {
         })
     }
 
-    public withAddedReferencePresentation(targetNodeId: string, referencePresentation: IReference["presentation"]): Editor {
+    public withAddedReferencePresentation(targetNodeId: string, referencePresentation: IReference['presentation']): Editor {
         // unapplied changes
         if (this.data.transientValues && Object.keys(this.data.transientValues).includes(targetNodeId)) {
             return new Editor({
@@ -239,8 +240,7 @@ export class Editor {
         return (this.data.transientReferencePropertyValues ?? this.data.transientValues ?? this.data.initialValues)[this.data.selectedReferenceId]?.properties?.[propertyName]
     }
 
-    public getSelectedNodeIds(): string[]
-    {
+    public getSelectedNodeIds(): string[] {
         // todo memo value
         return Object.keys(this.data.transientValues ?? this.data.initialValues ?? {})
     }

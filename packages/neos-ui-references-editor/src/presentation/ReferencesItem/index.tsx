@@ -50,6 +50,9 @@ export const ReferencesItem: React.FC<ReferencesItemProps> = (props) => {
     const {reference, index, isSortable, onMove} = props;
     const ref = React.useRef<HTMLDivElement>(null);
 
+    // removing a reference with relation properties loses them, so it has to be confirmed
+    const [isConfirmingRemoval, setIsConfirmingRemoval] = React.useState(false);
+
     const [, connectDrop] = useDrop({
         accept: DND_TYPE,
         hover(item: DragItem, monitor) {
@@ -69,7 +72,7 @@ export const ReferencesItem: React.FC<ReferencesItemProps> = (props) => {
 
     const [{isDragging}, connectDrag] = useDrag({
         item: {type: DND_TYPE, index} as DragItem,
-        canDrag: isSortable,
+        canDrag: isSortable && !isConfirmingRemoval,
         collect: monitor => ({isDragging: monitor.isDragging()})
     });
 
@@ -83,6 +86,33 @@ export const ReferencesItem: React.FC<ReferencesItemProps> = (props) => {
         } else if (event.key === 'ArrowDown') {
             event.preventDefault();
             onMove(index, index + 1);
+        }
+    };
+
+    const cancelRemovalRef = React.useRef<HTMLButtonElement>(null);
+    const confirmRemovalRef = React.useRef<HTMLDivElement>(null);
+    React.useEffect(() => {
+        const confirmRemoval = confirmRemovalRef.current;
+        if (!isConfirmingRemoval || !confirmRemoval) {
+            return undefined;
+        }
+        cancelRemovalRef.current?.focus();
+        // a native listener, because the dialogs listen for escape on the document and would close as well
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                event.stopPropagation();
+                setIsConfirmingRemoval(false);
+            }
+        };
+        confirmRemoval.addEventListener('keydown', handleKeyDown);
+        return () => confirmRemoval.removeEventListener('keydown', handleKeyDown);
+    }, [isConfirmingRemoval]);
+
+    const handleRemove = () => {
+        if (hasPropertyValues(reference.properties)) {
+            setIsConfirmingRemoval(true);
+        } else {
+            props.onRemove();
         }
     };
 
@@ -147,9 +177,37 @@ export const ReferencesItem: React.FC<ReferencesItemProps> = (props) => {
                     icon="times"
                     title={translate('Neos.Neos.Ui:Main:referencesEditor.remove', 'Remove reference')}
                     isDestructive
-                    onClick={props.onRemove}
+                    onClick={handleRemove}
                 />
             </span>
+
+            {isConfirmingRemoval ? (
+                <div
+                    ref={confirmRemovalRef}
+                    className={style.confirmRemoval}
+                    role="alertdialog"
+                    aria-label={translate('Neos.Neos.Ui:Main:referencesEditor.remove', 'Remove reference')}
+                >
+                    <span className={style.confirmRemovalText}>
+                        {translate('Neos.Neos.Ui:Main:referencesEditor.confirmRemoval', 'Its properties will be lost.')}
+                    </span>
+                    <button
+                        ref={cancelRemovalRef}
+                        type="button"
+                        className={style.confirmButton}
+                        onClick={() => setIsConfirmingRemoval(false)}
+                    >
+                        {translate('Neos.Neos:Main:cancel', 'Cancel')}
+                    </button>
+                    <button
+                        type="button"
+                        className={cx(style.confirmButton, style.confirmButtonDestructive)}
+                        onClick={props.onRemove}
+                    >
+                        {translate('Neos.Neos.Ui:Main:referencesEditor.removeConfirm', 'Remove')}
+                    </button>
+                </div>
+            ) : null}
         </div>
     );
 };

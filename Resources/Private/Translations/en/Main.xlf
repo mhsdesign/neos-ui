@@ -442,6 +442,12 @@
             <trans-unit id="referencesEditor.referencesTo" xml:space="preserve">
                 <source>references</source>
             </trans-unit>
+            <trans-unit id="referencesEditor.confirmRemoval" xml:space="preserve">
+                <source>Its properties will be lost.</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.removeConfirm" xml:space="preserve">
+                <source>Remove</source>
+            </trans-unit>
         </body>
     </file>
 </xliff>

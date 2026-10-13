@@ -147,6 +147,12 @@ const InspectorReferencesEditor: React.FC<any> = (props) => {
         return <ErrorView error={fetch__referencesSummary.error} />;
     }
 
+    // the node whose references are edited, shown as "source → target" when editing relation properties
+    const source = {
+        icon: (selectedNodeId && nodeTypesRegistry.getNodeType(selectedNodeId.nodeType)?.ui?.icon) || 'file',
+        label: selectedNodeId?.label ?? ''
+    };
+
     const references = Object.values(editor.getReferences());
     const hasPropertySchema = Object.keys(editor.getPropertySchema()).length > 0;
 
@@ -186,7 +192,8 @@ const InspectorReferencesEditor: React.FC<any> = (props) => {
                     startingPoint={STARTING_POINT}
                     allowedNodeTypes={allowedNodeTypes}
                     baseNodeTypeFilter={baseNodeTypeFilter}
-                    hasPropertySchema={hasPropertySchema}
+                    propertySchema={editor.getPropertySchema()}
+                    source={source}
                     maxItems={maxItems}
                     references={editor.getReferences()}
                     onCancel={() => setIsPickerOpen(false)}
@@ -198,13 +205,7 @@ const InspectorReferencesEditor: React.FC<any> = (props) => {
             ) : null}
             {
                 editor.isReferencePropertyEditingOpen() && (
-                    <ReferencesPropertiesDialog
-                        editor$={editor$}
-                        source={{
-                            icon: (selectedNodeId && nodeTypesRegistry.getNodeType(selectedNodeId.nodeType)?.ui?.icon) || 'file',
-                            label: selectedNodeId?.label ?? ''
-                        }}
-                    />
+                    <ReferencesPropertiesDialog editor$={editor$} source={source} />
                 )
             }
         </>

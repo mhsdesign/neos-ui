@@ -101,7 +101,7 @@ export const StandaloneReferencesEditor: React.FC<any> = (props) => {
                     startingPoint={STARTING_POINT}
                     allowedNodeTypes={allowedNodeTypes}
                     baseNodeTypeFilter={baseNodeTypeFilter}
-                    hasPropertySchema={false}
+                    source={{icon: 'file', label: ''}}
                     maxItems={maxItems}
                     references={Object.fromEntries(items.map(item => [item.targetNodeId, item]))}
                     onCancel={() => setIsPickerOpen(false)}

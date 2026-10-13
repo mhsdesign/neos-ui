@@ -188,6 +188,56 @@
     cursor: default;
 }
 
+/* replaces the item content while the removal of a reference with properties is confirmed */
+.confirmRemoval {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-Half);
+    padding: 0 var(--spacing-Half) 0 var(--spacing-Full);
+    background-color: var(--colors-ContrastDarkest);
+    box-shadow: inset 3px 0 0 var(--colors-Error);
+    cursor: default;
+}
+
+.confirmRemovalText {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--fontSize-Small);
+    line-height: 16px;
+    color: var(--colors-ContrastBrightest);
+}
+
+.confirmButton {
+    flex: none;
+    height: 32px;
+    padding: 0 var(--spacing-Half);
+    border: 0;
+    background-color: var(--colors-ContrastNeutral);
+    color: var(--colors-ContrastBrightest);
+    font: inherit;
+    font-size: var(--fontSize-Small);
+    cursor: pointer;
+    transition: background-color var(--transition-Default);
+}
+
+.confirmButton:hover,
+.confirmButton:focus {
+    background-color: var(--colors-ContrastDark);
+    outline: none;
+}
+
+.confirmButtonDestructive {
+    background-color: var(--colors-Error);
+}
+
+.confirmButtonDestructive:hover,
+.confirmButtonDestructive:focus {
+    background-color: var(--colors-ErrorHover);
+}
+
 .skeletonIcon {
     flex: none;
     width: 16px;

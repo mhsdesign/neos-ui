@@ -61,11 +61,11 @@
 }
 
 .item:hover .grip,
-.grip:focus {
+.grip:focus-visible {
     color: #c9c9c9;
 }
 
-.grip:focus {
+.grip:focus-visible {
     outline: 1px solid var(--colors-PrimaryBlue);
     outline-offset: -1px;
 }
@@ -168,17 +168,17 @@
 }
 
 .action:hover,
-.action:focus {
+.action:focus-visible {
     background-color: var(--colors-PrimaryBlue);
     color: var(--colors-ContrastBrightest);
 }
 
 .actionDestructive:hover,
-.actionDestructive:focus {
+.actionDestructive:focus-visible {
     background-color: var(--colors-Error);
 }
 
-.action:focus {
+.action:focus-visible {
     outline: none;
 }
 
@@ -224,7 +224,7 @@
 }
 
 .confirmButton:hover,
-.confirmButton:focus {
+.confirmButton:focus-visible {
     background-color: var(--colors-ContrastDark);
     outline: none;
 }
@@ -234,7 +234,7 @@
 }
 
 .confirmButtonDestructive:hover,
-.confirmButtonDestructive:focus {
+.confirmButtonDestructive:focus-visible {
     background-color: var(--colors-ErrorHover);
 }
 

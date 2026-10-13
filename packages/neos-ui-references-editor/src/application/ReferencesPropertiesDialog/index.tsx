@@ -3,7 +3,7 @@ import * as React from 'react';
 import {useLatestState} from '@neos-project/framework-observable-react';
 import {State} from '@neos-project/framework-observable';
 import {Editor} from '../../domain/Editor/Editor';
-import {RelationPropertiesDialog} from './RelationPropertiesDialog';
+import {RelationPropertiesDialog, RelationPropertiesDialogProps} from './RelationPropertiesDialog';
 
 export {RelationPropertiesDialog} from './RelationPropertiesDialog';
 
@@ -12,24 +12,24 @@ export {RelationPropertiesDialog} from './RelationPropertiesDialog';
  */
 export const ReferencesPropertiesDialog: React.FC<{
     editor$: State<Editor>;
-    source: {icon: string; label: string};
-}> = ({editor$, source}) => {
+    title: string;
+    source: RelationPropertiesDialogProps['source'];
+}> = ({editor$, title, source}) => {
     const editor = useLatestState(editor$);
-    const reference = editor.getReferenceInPropertyEditing();
 
     const dismiss = React.useCallback(() => editor$.update(editor => editor.withDismissedReferencePropertyEditing()), [editor$]);
-    const apply = React.useCallback((properties: Record<string, unknown>) => editor$.update(editor =>
-        Object.entries(properties)
-            .reduce((currentEditor, [propertyName, value]) => currentEditor.withReferenceProperty(propertyName, value), editor)
-            .withAppliedReferencePropertyEditing()
-    ), [editor$]);
+    const apply = React.useCallback(
+        (propertiesByTargetNodeId: Record<string, Record<string, unknown>>) => editor$.update(editor => editor.withAppliedPropertiesForReferences(propertiesByTargetNodeId)),
+        [editor$]
+    );
 
     return (
         <RelationPropertiesDialog
+            title={title}
             source={source}
-            target={reference?.presentation}
+            references={Object.values(editor.getReferences())}
+            initialTargetNodeId={editor.getSelectedReferenceId() ?? ''}
             propertySchema={editor.getPropertySchema()}
-            initialProperties={reference?.properties}
             onApply={apply}
             onCancel={dismiss}
         />

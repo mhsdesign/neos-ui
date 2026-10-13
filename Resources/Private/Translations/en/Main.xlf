@@ -439,14 +439,20 @@
             <trans-unit id="referencesEditor.remove" xml:space="preserve">
                 <source>Remove reference</source>
             </trans-unit>
-            <trans-unit id="referencesEditor.referencesTo" xml:space="preserve">
-                <source>references</source>
-            </trans-unit>
             <trans-unit id="referencesEditor.confirmRemoval" xml:space="preserve">
                 <source>Its properties will be lost.</source>
             </trans-unit>
             <trans-unit id="referencesEditor.removeConfirm" xml:space="preserve">
                 <source>Remove</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.source" xml:space="preserve">
+                <source>From</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.target" xml:space="preserve">
+                <source>To</source>
+            </trans-unit>
+            <trans-unit id="referencesEditor.relation" xml:space="preserve">
+                <source>Relation</source>
             </trans-unit>
         </body>
     </file>

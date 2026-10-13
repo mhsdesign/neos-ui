@@ -148,10 +148,14 @@ const InspectorReferencesEditor: React.FC<any> = (props) => {
     }
 
     // the node whose references are edited, shown as "source → target" when editing relation properties
+    const sourceNodeType = selectedNodeId ? nodeTypesRegistry.getNodeType(selectedNodeId.nodeType) : null;
     const source = {
-        icon: (selectedNodeId && nodeTypesRegistry.getNodeType(selectedNodeId.nodeType)?.ui?.icon) || 'file',
-        label: selectedNodeId?.label ?? ''
+        icon: sourceNodeType?.ui?.icon || 'file',
+        label: selectedNodeId?.label ?? '',
+        nodeTypeLabel: sourceNodeType?.label ? i18nRegistry.translate(sourceNodeType.label) : undefined
     };
+    const title = (props.label && i18nRegistry.translate(props.label))
+        || translate('Neos.Neos.Ui:Main:referencesEditor.pickerTitle', 'Select references');
 
     const references = Object.values(editor.getReferences());
     const hasPropertySchema = Object.keys(editor.getPropertySchema()).length > 0;
@@ -185,8 +189,7 @@ const InspectorReferencesEditor: React.FC<any> = (props) => {
             </button>
             {isPickerOpen && workspaceName && dimension ? (
                 <ReferencesPickerDialog
-                    title={(props.label && i18nRegistry.translate(props.label))
-                        || translate('Neos.Neos.Ui:Main:referencesEditor.pickerTitle', 'Select references')}
+                    title={title}
                     workspaceName={workspaceName}
                     dimensionValues={dimension}
                     startingPoint={STARTING_POINT}
@@ -205,7 +208,7 @@ const InspectorReferencesEditor: React.FC<any> = (props) => {
             ) : null}
             {
                 editor.isReferencePropertyEditingOpen() && (
-                    <ReferencesPropertiesDialog editor$={editor$} source={source} />
+                    <ReferencesPropertiesDialog editor$={editor$} title={title} source={source} />
                 )
             }
         </>

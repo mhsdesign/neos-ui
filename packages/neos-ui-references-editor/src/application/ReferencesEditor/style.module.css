@@ -23,11 +23,11 @@
 }
 
 .addButton:hover:enabled,
-.addButton:focus:enabled {
+.addButton:focus-visible:enabled {
     background-color: var(--colors-PrimaryBlue);
 }
 
-.addButton:focus {
+.addButton:focus-visible {
     outline: none;
 }
 

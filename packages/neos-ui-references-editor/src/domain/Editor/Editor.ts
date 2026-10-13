@@ -117,6 +117,28 @@ export class Editor {
         return this;
     }
 
+    /**
+     * Applies the properties of several references at once (the properties dialog can page through all references)
+     */
+    public withAppliedPropertiesForReferences(propertiesByTargetNodeId: Record<string, Record<string, unknown>>): Editor {
+        const references = this.data.transientValues ?? this.data.initialValues ?? {};
+        return new Editor({
+            ...this.data,
+            isReferencePropertyEditingOpen: false,
+            transientReferencePropertyValues: undefined as any,
+            transientValues: Object.fromEntries(Object.entries(references).map(([targetNodeId, reference]) => [
+                targetNodeId,
+                targetNodeId in propertiesByTargetNodeId
+                    ? {...reference, properties: propertiesByTargetNodeId[targetNodeId]}
+                    : reference
+            ]))
+        })
+    }
+
+    public getSelectedReferenceId(): string | undefined {
+        return this.data.selectedReferenceId;
+    }
+
     public withDismissedReferencePropertyEditing(): Editor {
         return new Editor({
             ...this.data,

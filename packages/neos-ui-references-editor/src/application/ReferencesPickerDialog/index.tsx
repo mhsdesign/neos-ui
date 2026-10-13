@@ -20,7 +20,7 @@ interface ReferencesPickerDialogProps {
     baseNodeTypeFilter: string;
     // relation properties can be edited, if a schema is given
     propertySchema?: Record<string, any>;
-    source: {icon: string; label: string};
+    source: {icon: string; label: string; nodeTypeLabel?: string};
     maxItems?: number;
     references: IReferences;
     onApply(references: IReferences): void;
@@ -51,7 +51,6 @@ export const ReferencesPickerDialog: React.FC<ReferencesPickerDialogProps> = (pr
     const serialize = (references: IReference[]) => JSON.stringify(references.map(({targetNodeId, properties}) => [targetNodeId, properties ?? null]));
     const initialSerialization = React.useMemo(() => serialize(Object.values(props.references)), []);
     const isDirty = serialize(items) !== initialSerialization;
-    const editingItem = items.find(item => item.targetNodeId === editingNodeId);
 
     const selectNode = (treeNode: TreeNodeDTO, ancestors: TreeNodeBreadcrumb[]) => setItems(currentItems => {
         if (currentItems.some(item => item.targetNodeId === treeNode.nodeAggregateIdentifier)) {
@@ -155,15 +154,18 @@ export const ReferencesPickerDialog: React.FC<ReferencesPickerDialogProps> = (pr
                 </div>
             </Dialog>
             {/* rendered after the picker, so it is stacked above it */}
-            {editingItem && props.propertySchema ? (
+            {editingNodeId && props.propertySchema ? (
                 <RelationPropertiesDialog
+                    title={props.title}
                     source={props.source}
-                    target={editingItem.presentation}
+                    references={items}
+                    initialTargetNodeId={editingNodeId}
                     propertySchema={props.propertySchema}
-                    initialProperties={editingItem.properties}
                     onCancel={() => setEditingNodeId(null)}
-                    onApply={properties => {
-                        setItems(currentItems => currentItems.map(item => item.targetNodeId === editingItem.targetNodeId ? {...item, properties} : item));
+                    onApply={propertiesByTargetNodeId => {
+                        setItems(currentItems => currentItems.map(item => item.targetNodeId in propertiesByTargetNodeId
+                            ? {...item, properties: propertiesByTargetNodeId[item.targetNodeId]}
+                            : item));
                         setEditingNodeId(null);
                     }}
                 />
